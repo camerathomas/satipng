@@ -55,7 +55,7 @@ def bouw_prompt(artikel, onderschrift, extra=""):
         "Approach: (1) Read the text carefully. "
         "(2) Pick an existing traffic sign whose shape or pictogram fits the text. "
         "(3) Change the existing traffic sign just slightly so we understand the message, the joke. "
-        "(4) Add another visual symbol that connects to the text to finalize the joke."
+        "(4) Change the pose in the original traffic according to what is applicable from the given text. "
         "Visual style: red border of a triangular or round traffic sign, white background, "
         "black pictogram, flat vector illustration, minimal, clean. "
         "Use visual graphics only, no letters, text is forbidden. "
