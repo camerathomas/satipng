@@ -2,11 +2,13 @@ import streamlit as st
 import requests
 import urllib.parse
 import base64
+from io import BytesIO
+from PIL import Image, ImageDraw, ImageFont
 
-st.set_page_config(page_title="Satirische verkeersbord generator", layout="centered")
+st.set_page_config(page_title="Parodie verkeersbord generator", layout="centered")
 
-st.title("🎨 Satirische verkeersbord generator")
-st.caption("Genereer satirische verkeersborden op basis van een artikel")
+st.title("🚦 Parodie verkeersbord generator")
+st.caption("Genereer een parodie op een verkeersbord op basis van een artikel en een onderschrift")
 
 # Sessie-state
 if "laatste_afbeelding" not in st.session_state:
@@ -15,6 +17,8 @@ if "laatste_prompt" not in st.session_state:
     st.session_state.laatste_prompt = ""
 if "laatste_bron" not in st.session_state:
     st.session_state.laatste_bron = ""
+if "laatste_onderschrift" not in st.session_state:
+    st.session_state.laatste_onderschrift = ""
 if "teller" not in st.session_state:
     st.session_state.teller = 0
 
@@ -26,32 +30,38 @@ try:
 except Exception:
     CF_BESCHIKBAAR = False
 
-# Invoerveld
+# Invoervelden
 artikel_tekst = st.text_area(
-    "Plak hier de artikeltekst:",
-    height=200,
+    "Plak hier de artikeltekst (context):",
+    height=180,
     placeholder="Voer de nieuws- of artikelinhoud in...",
 )
 
-# Optioneel: eigen stijl toevoegen
+onderschrift = st.text_input(
+    "Onderschrift (bepaalt het bord):",
+    placeholder="bijv. 'Verboden om te tanken op maandag' of 'Pas op! Laag overvliegende drones'",
+)
+
 extra_prompt = st.text_input(
     "Extra stijl (optioneel):",
     placeholder="bijv. 'minimalistisch', 'donkere achtergrond'",
 )
 
-# Bouw de prompt — de versie die eerder werkte
-def bouw_prompt(artikel, extra=""):
+# Bouw de prompt — onderschrift stuurt het bord
+def bouw_prompt(artikel, onderschrift, extra=""):
     prompt = (
         "You are a cartoonist for a newspaper. "
-        "Create a parody of a recognizable traffic sign based on the article below. "
-        "Approach: (1) Read the article and determine its core theme. "
-        "(2) Pick an existing traffic sign whose shape or pictogram is close to that theme. "
-        "(3) Replace exactly ONE element of the traffic sign with a clear visueal element that refers to the article. "
-        "(4) Add another element from the text to make the parody really funny. "
+        "Create a parody of a recognizable traffic sign. "
+        "The sign must visually match the following caption: "
+        f"'{onderschrift}'. "
+        "Approach: (1) Read the caption carefully. "
+        "(2) Pick an existing traffic sign whose shape or pictogram fits the caption. "
+        "(3) Replace exactly ONE element of the pictogram so the parody becomes clear. "
+        "(4) Keep the rest of the sign intact and recognizable. "
         "Visual style: red border of a triangular or round traffic sign, white background, "
         "black pictogram, flat vector illustration, minimal, clean. "
-        "Use graphics only, no letters. "
-        f"Article: {artikel[:500]}"
+        "No text, no letters, no words in the image. "
+        f"Article (for context): {artikel[:300]}"
     )
     if extra.strip():
         prompt += f" Extra style: {extra}"
@@ -103,6 +113,68 @@ def genereer_cloudflare(prompt):
         return None, str(e)
 
 # ============================================
+# PILLOW — onderschrift toevoegen
+# ============================================
+
+def voeg_onderschrift_toe(afbeelding_bytes, tekst):
+    """Voeg een onderschrift toe onder de afbeelding."""
+    img = Image.open(BytesIO(afbeelding_bytes)).convert("RGB")
+    breedte, hoogte = img.size
+
+    marge_onder = 180
+    nieuwe_hoogte = hoogte + marge_onder
+    nieuwe_img = Image.new("RGB", (breedte, nieuwe_hoogte), "white")
+    nieuwe_img.paste(img, (0, 0))
+
+    draw = ImageDraw.Draw(nieuwe_img)
+
+    # Lettertype zoeken
+    font = None
+    for pad in [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+        "arial.ttf",
+    ]:
+        try:
+            font = ImageFont.truetype(pad, 40)
+            break
+        except Exception:
+            continue
+    if font is None:
+        font = ImageFont.load_default()
+
+    # Tekst opsplitsen in regels (max ~30 tekens per regel)
+    woorden = tekst.split()
+    regels = []
+    huidige = ""
+    for w in woorden:
+        test = (huidige + " " + w).strip()
+        if len(test) <= 34:
+            huidige = test
+        else:
+            if huidige:
+                regels.append(huidige)
+            huidige = w
+    if huidige:
+        regels.append(huidige)
+
+    # Tekst centreren
+    regel_hoogte = 50
+    totaal_hoogte = regel_hoogte * len(regels)
+    y = hoogte + (marge_onder - totaal_hoogte) // 2
+
+    for regel in regels:
+        bbox = draw.textbbox((0, 0), regel, font=font)
+        tekst_breedte = bbox[2] - bbox[0]
+        x = (breedte - tekst_breedte) // 2
+        draw.text((x, y), regel, fill="black", font=font)
+        y += regel_hoogte
+
+    buffer = BytesIO()
+    nieuwe_img.save(buffer, format="JPEG", quality=92)
+    return buffer.getvalue()
+
+# ============================================
 # KNOPPEN
 # ============================================
 
@@ -118,28 +190,34 @@ with col2:
 # GENERATIE
 # ============================================
 
-if (knop_pollinations or knop_cloudflare) and artikel_tekst.strip():
-    prompt = bouw_prompt(artikel_tekst, extra_prompt)
-
-    if knop_pollinations:
-        with st.spinner("Pollinations: bord genereren..."):
-            img_bytes, fout = genereer_pollinations(prompt)
-            bron = "Pollinations"
+if (knop_pollinations or knop_cloudflare):
+    if not artikel_tekst.strip():
+        st.warning("Voer eerst de artikeltekst in.")
+    elif not onderschrift.strip():
+        st.warning("Voer eerst een onderschrift in.")
     else:
-        with st.spinner("Cloudflare: bord genereren..."):
-            img_bytes, fout = genereer_cloudflare(prompt)
-            bron = "Cloudflare Workers AI"
+        prompt = bouw_prompt(artikel_tekst, onderschrift, extra_prompt)
 
-    if img_bytes:
-        st.session_state.laatste_afbeelding = base64.b64encode(img_bytes).decode()
-        st.session_state.laatste_prompt = prompt
-        st.session_state.laatste_bron = bron
-        st.session_state.teller += 1
-    else:
-        st.error(f"Generatie mislukt ({bron}): {fout}")
+        if knop_pollinations:
+            with st.spinner("Pollinations: bord genereren..."):
+                img_bytes, fout = genereer_pollinations(prompt)
+                bron = "Pollinations"
+        else:
+            with st.spinner("Cloudflare: bord genereren..."):
+                img_bytes, fout = genereer_cloudflare(prompt)
+                bron = "Cloudflare Workers AI"
 
-elif (knop_pollinations or knop_cloudflare) and not artikel_tekst.strip():
-    st.warning("Voer eerst de artikeltekst in.")
+        if img_bytes:
+            with st.spinner("Onderschrift toevoegen..."):
+                img_bytes = voeg_onderschrift_toe(img_bytes, onderschrift.strip())
+
+            st.session_state.laatste_afbeelding = base64.b64encode(img_bytes).decode()
+            st.session_state.laatste_prompt = prompt
+            st.session_state.laatste_bron = bron
+            st.session_state.laatste_onderschrift = onderschrift.strip()
+            st.session_state.teller += 1
+        else:
+            st.error(f"Generatie mislukt ({bron}): {fout}")
 
 # ============================================
 # WEERGAVE
@@ -147,6 +225,7 @@ elif (knop_pollinations or knop_cloudflare) and not artikel_tekst.strip():
 
 if st.session_state.laatste_afbeelding:
     st.markdown(f"**Bron:** {st.session_state.laatste_bron}")
+    st.markdown(f"**Onderschrift:** *{st.session_state.laatste_onderschrift}*")
     st.image(
         f"data:image/jpeg;base64,{st.session_state.laatste_afbeelding}",
         caption="Laatste gegenereerde bord",
