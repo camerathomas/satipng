@@ -34,10 +34,23 @@ if st.button("🚦 Genereer verkeersbord", type="primary"):
     if not artikel_tekst.strip():
         st.warning("Voer eerst de artikeltekst in.")
     else:
-        basis_prompt = (
-            f"A satirical traffic warning sign, clean vector illustration style, "
-            f"centered composition, simple background. "
-            f"Theme: {artikel_tekst[:200]}"
+basis_prompt = (
+    "You are a satirical cartoonist for a newspaper. "
+    "Create one image based on the article text below. "
+    "Your trademark: you take a recognizable traffic sign and tilt its meaning "
+    "with one simple graphic twist, so the sign tells a hilarious or painful "
+    "truth about the article. "
+    "Approach: (1) Read the article and determine the core in one sentence. "
+    "(2) Find an existing traffic sign whose shape, pictogram, or meaning comes "
+    "close to that core. (3) Replace or distort one element of that sign so the "
+    "satire becomes visible. (4) Add a caption in the style of a traffic sign: "
+    "'Forbidden to ...', 'Stop for the ...', 'Warning! Low-flying ...'. "
+    "Visual style: use the red border of triangular or round traffic signs as a "
+    "recognizable element. Simple, graphic, vector-like. White background, black "
+    "and red lines. One clear pictogram, no cluttered details. The caption is "
+    "placed below or inside the sign, in short, readable text. "
+    f"Article: {artikel_tekst[:500]}"
+)
         )
         if extra_prompt.strip():
             basis_prompt += f" Style: {extra_prompt}"
