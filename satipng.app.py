@@ -42,18 +42,15 @@ extra_prompt = st.text_input(
 # Bouw de prompt — de versie die eerder werkte
 def bouw_prompt(artikel, extra=""):
     prompt = (
-        "You are a satirical cartoonist for a newspaper. "
-        "Create one image based on the article text below. "
-        "Your trademark: you take a recognizable traffic sign and tilt its meaning "
-        "with one simple graphic twist, so the sign tells a hilarious or painful "
-        "truth about the article. "
-        "Approach: (1) Read the article and determine the core in one sentence. "
-        "(2) Find an existing traffic sign whose shape, pictogram, or meaning comes "
-        "close to that core. (3) Replace or distort one element of that sign so the "
-        "satire becomes visible. "
-        "Visual style: use the red border of triangular or round traffic signs as a "
-        "recognizable element. Simple, graphic, vector-like. White background, black "
-        "and red lines. One clear pictogram, no cluttered details. "
+        "You are a cartoonist for a newspaper. "
+        "Create a parody of a recognizable traffic sign based on the article below. "
+        "Approach: (1) Read the article and determine its core theme. "
+        "(2) Pick an existing traffic sign whose shape or pictogram is close to that theme. "
+        "(3) Replace exactly ONE element of the pictogram with something that refers to the article. "
+        "(4) Keep the rest of the sign intact and recognizable. "
+        "Visual style: red border of a triangular or round traffic sign, white background, "
+        "black pictogram, flat vector illustration, minimal, clean. "
+        "Use graphics only, no letters. "
         f"Article: {artikel[:500]}"
     )
     if extra.strip():
