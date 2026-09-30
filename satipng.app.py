@@ -56,11 +56,12 @@ def bouw_prompt(artikel, onderschrift, extra=""):
         f"'{onderschrift}'. "
         "Approach: (1) Read the caption carefully. "
         "(2) Pick an existing traffic sign whose shape or pictogram fits the caption. "
-        "(3) Replace exactly ONE element of the pictogram so the parody becomes clear. "
-        "(4) Keep the rest of the sign intact and recognizable. "
+        "(3) Replace exactly ONE element of the traffic sign so the parody becomes clear. "
+        "(4) Add another visual symbol that connects to the text"
+        "(5) Make it a funny and understandable visual joke. "
         "Visual style: red border of a triangular or round traffic sign, white background, "
         "black pictogram, flat vector illustration, minimal, clean. "
-        "No text, no letters, no words in the image. "
+        "Use graphics only, no letters. "
         f"Article (for context): {artikel[:300]}"
     )
     if extra.strip():
