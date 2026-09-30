@@ -8,7 +8,7 @@ st.set_page_config(page_title="Satirische verkeersbord generator", layout="cente
 st.title("🎨 Satirische verkeersbord generator")
 st.caption("Gebaseerd op Pollinations gratis afbeeldingsgeneratie · Flux model")
 
-# Sessie-state voor het bijhouden van de laatste afbeelding
+# Sessie-state
 if "laatste_afbeelding" not in st.session_state:
     st.session_state.laatste_afbeelding = None
 if "laatste_prompt" not in st.session_state:
@@ -23,10 +23,10 @@ artikel_tekst = st.text_area(
     placeholder="Voer de nieuws- of artikelinhoud in...",
 )
 
-# Optioneel: eigen prompt toevoegen
+# Optioneel: eigen stijl toevoegen
 extra_prompt = st.text_input(
-    "Extra beschrijving (optioneel):",
-    placeholder="bijv. 'rood bord met witte tekst', 'minimalistisch', 'donkere achtergrond'",
+    "Extra stijl (optioneel):",
+    placeholder="bijv. 'minimalistisch', 'donkere achtergrond', 'handgetekend'",
 )
 
 # Genereer-knop
@@ -34,26 +34,25 @@ if st.button("🚦 Genereer verkeersbord", type="primary"):
     if not artikel_tekst.strip():
         st.warning("Voer eerst de artikeltekst in.")
     else:
-basis_prompt = (
-    "You are a satirical cartoonist for a newspaper. "
-    "Create one image based on the article text below. "
-    "Your trademark: you take a recognizable traffic sign and tilt its meaning "
-    "with one simple graphic twist, so the sign tells a hilarious or painful "
-    "truth about the article. "
-    "Approach: (1) Read the article and determine the core in one sentence. "
-    "(2) Find an existing traffic sign whose shape, pictogram, or meaning comes "
-    "close to that core. (3) Replace or distort one element of that sign so the "
-    "satire becomes visible. (4) Add a caption in the style of a traffic sign: "
-    "'Forbidden to ...', 'Stop for the ...', 'Warning! Low-flying ...'. "
-    "Visual style: use the red border of triangular or round traffic signs as a "
-    "recognizable element. Simple, graphic, vector-like. White background, black "
-    "and red lines. One clear pictogram, no cluttered details. The caption is "
-    "placed below or inside the sign, in short, readable text. "
-    f"Article: {artikel_tekst[:500]}"
-)
+        basis_prompt = (
+            "You are a satirical cartoonist for a newspaper. "
+            "Create one image based on the article text below. "
+            "Your trademark: you take a recognizable traffic sign and tilt its meaning "
+            "with one simple graphic twist, so the sign tells a hilarious or painful "
+            "truth about the article. "
+            "Approach: (1) Read the article and determine the core in one sentence. "
+            "(2) Find an existing traffic sign whose shape, pictogram, or meaning comes "
+            "close to that core. (3) Replace or distort one element of that sign so the "
+            "satire becomes visible. (4) Add a caption in the style of a traffic sign: "
+            "'Forbidden to ...', 'Stop for the ...', 'Warning! Low-flying ...'. "
+            "Visual style: use the red border of triangular or round traffic signs as a "
+            "recognizable element. Simple, graphic, vector-like. White background, black "
+            "and red lines. One clear pictogram, no cluttered details. The caption is "
+            "placed below or inside the sign, in short, readable text. "
+            f"Article: {artikel_tekst[:500]}"
         )
         if extra_prompt.strip():
-            basis_prompt += f" Style: {extra_prompt}"
+            basis_prompt += f" Extra style: {extra_prompt}"
 
         with st.spinner("Afbeelding genereren..."):
             try:
@@ -88,7 +87,6 @@ if st.session_state.laatste_afbeelding:
         use_container_width=True,
     )
 
-    # Download-knop
     st.download_button(
         label="⬇️ Download afbeelding",
         data=base64.b64decode(st.session_state.laatste_afbeelding),
