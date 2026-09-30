@@ -93,7 +93,6 @@ def genereer_cloudflare(prompt):
     payload = {
         "prompt": prompt,
         "steps": 4,
-        "seed": st.session_state.teller,
     }
     headers = {
         "Authorization": f"Bearer {CF_API_TOKEN}",
@@ -107,7 +106,7 @@ def genereer_cloudflare(prompt):
             if img_b64:
                 return img_b64, None
             return None, f"Onverwachte response: {data}"
-        return None, f"HTTP {response.status_code}: {response.text[:200]}"
+        return None, f"HTTP {response.status_code}: {response.text[:300]}"
     except Exception as e:
         return None, str(e)
 
