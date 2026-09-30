@@ -2,8 +2,6 @@ import streamlit as st
 import requests
 import urllib.parse
 import base64
-from io import BytesIO
-from PIL import Image, ImageDraw, ImageFont
 
 st.set_page_config(page_title="Satirische verkeersbord generator", layout="centered")
 
@@ -28,37 +26,34 @@ try:
 except Exception:
     CF_BESCHIKBAAR = False
 
-# Invoervelden
+# Invoerveld
 artikel_tekst = st.text_area(
     "Plak hier de artikeltekst:",
     height=200,
     placeholder="Voer de nieuws- of artikelinhoud in...",
 )
 
-onderschrift = st.text_input(
-    "Onderschrift (satirische tekst onder het bord):",
-    placeholder="bijv. 'Verboden om te tanken op maandag'",
-)
-
+# Optioneel: eigen stijl toevoegen
 extra_prompt = st.text_input(
     "Extra stijl (optioneel):",
     placeholder="bijv. 'minimalistisch', 'donkere achtergrond'",
 )
 
-# Bouw de prompt — LET OP: geen tekst in het bord!
+# Bouw de prompt — de versie die eerder werkte
 def bouw_prompt(artikel, extra=""):
     prompt = (
         "You are a satirical cartoonist for a newspaper. "
-        "Create one image of a traffic sign based on the article text below. "
-        "IMPORTANT: Do NOT include any text, letters, numbers or words in the image. "
-        "The sign itself must be completely blank — only the pictogram and the red border. "
+        "Create one image based on the article text below. "
+        "Your trademark: you take a recognizable traffic sign and tilt its meaning "
+        "with one simple graphic twist, so the sign tells a hilarious or painful "
+        "truth about the article. "
         "Approach: (1) Read the article and determine the core in one sentence. "
         "(2) Find an existing traffic sign whose shape, pictogram, or meaning comes "
         "close to that core. (3) Replace or distort one element of that sign so the "
         "satire becomes visible. "
         "Visual style: use the red border of triangular or round traffic signs as a "
         "recognizable element. Simple, graphic, vector-like. White background, black "
-        "and red lines. One clear pictogram, no cluttered details. No text anywhere. "
+        "and red lines. One clear pictogram, no cluttered details. "
         f"Article: {artikel[:500]}"
     )
     if extra.strip():
@@ -111,47 +106,6 @@ def genereer_cloudflare(prompt):
         return None, str(e)
 
 # ============================================
-# PILLOW — onderschrift toevoegen
-# ============================================
-
-def voeg_onderschrift_toe(afbeelding_bytes, tekst):
-    """Voeg een onderschrift toe onder de afbeelding."""
-    img = Image.open(BytesIO(afbeelding_bytes)).convert("RGB")
-    breedte, hoogte = img.size
-
-    # Maak een nieuwe afbeelding met ruimte onderaan voor het onderschrift
-    marge_onder = 160
-    nieuwe_hoogte = hoogte + marge_onder
-    nieuwe_img = Image.new("RGB", (breedte, nieuwe_hoogte), "white")
-    nieuwe_img.paste(img, (0, 0))
-
-    draw = ImageDraw.Draw(nieuwe_img)
-
-    # Probeer een standaardlettertype; val terug op de default
-    try:
-        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
-    except Exception:
-        try:
-            font = ImageFont.truetype("arial.ttf", 36)
-        except Exception:
-            font = ImageFont.load_default()
-
-    # Bepaal tekstgrootte en centreer
-    bbox = draw.textbbox((0, 0), tekst, font=font)
-    tekst_breedte = bbox[2] - bbox[0]
-    tekst_hoogte = bbox[3] - bbox[1]
-
-    x = (breedte - tekst_breedte) // 2
-    y = hoogte + (marge_onder - tekst_hoogte) // 2
-
-    draw.text((x, y), tekst, fill="black", font=font)
-
-    # Terug naar bytes
-    buffer = BytesIO()
-    nieuwe_img.save(buffer, format="JPEG", quality=92)
-    return buffer.getvalue()
-
-# ============================================
 # KNOPPEN
 # ============================================
 
@@ -180,11 +134,6 @@ if (knop_pollinations or knop_cloudflare) and artikel_tekst.strip():
             bron = "Cloudflare Workers AI"
 
     if img_bytes:
-        # Onderschrift toevoegen (als ingevuld)
-        if onderschrift.strip():
-            with st.spinner("Onderschrift toevoegen..."):
-                img_bytes = voeg_onderschrift_toe(img_bytes, onderschrift.strip())
-
         st.session_state.laatste_afbeelding = base64.b64encode(img_bytes).decode()
         st.session_state.laatste_prompt = prompt
         st.session_state.laatste_bron = bron
