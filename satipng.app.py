@@ -58,7 +58,7 @@ def bouw_prompt(artikel, onderschrift, extra=""):
         "(4) Add another visual symbol that connects to the text to finalize the joke."
         "Visual style: red border of a triangular or round traffic sign, white background, "
         "black pictogram, flat vector illustration, minimal, clean. "
-        "Use graphics only, no letters. "
+        "Use visual graphics only, no letters, text is forbidden. "
         f"Article (for context): {artikel[:300]}"
     )
     if extra.strip():
