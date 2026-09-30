@@ -46,7 +46,7 @@ def bouw_prompt(artikel, extra=""):
         "Create a parody of a recognizable traffic sign based on the article below. "
         "Approach: (1) Read the article and determine its core theme. "
         "(2) Pick an existing traffic sign whose shape or pictogram is close to that theme. "
-        "(3) Replace exactly ONE element of the pictogram with something that refers to the article. "
+        "(3) Replace exactly ONE element of the pictogram with a clear visueal element that refers to the article. "
         "(4) Keep the rest of the sign intact and recognizable. "
         "Visual style: red border of a triangular or round traffic sign, white background, "
         "black pictogram, flat vector illustration, minimal, clean. "
