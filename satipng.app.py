@@ -50,7 +50,7 @@ extra_prompt = st.text_input(
 # Bouw de prompt — onderschrift stuurt het bord
 def bouw_prompt(artikel, onderschrift, extra=""):
     prompt = (
-        "You are a cartoonist for a newspaper. You draw only, you do not use text."
+        "You are a cartoonist for a newspaper. You draw only, you do not use text. "
         "Create a parody of a recognizable traffic sign. "
         "Approach: (1) Read the text carefully. "
         "(2) Pick an existing traffic sign whose shape or pictogram fits the text. "
